@@ -1,63 +1,25 @@
-import { useState, useEffect } from "react";
-
+import React, { useState } from 'react';
+import { useTaskList } from './useTaskList';
 
 export const TodoList = () => {
-  const [tasks, setTasks] = useState([]);
-  const [newTask, setNewTask] = useState("");
-  const [newTaskDescription, setNewTaskDescription] = useState("");
+  const { tasks, addTask, removeTask, updateTask } = useTaskList();
+  const [newTask, setNewTask] = useState('');
+  const [newTaskDescription, setNewTaskDescription] = useState('');
 
-  useEffect(() => {
-    const storedTasks = localStorage.getItem("tasks");
-    if (storedTasks) {
-      setTasks(JSON.parse(storedTasks));
-    }
-  }, []);
-
-  useEffect(() => {
-    localStorage.setItem("tasks", JSON.stringify(tasks));
-  }, [tasks]);
-
-  const addTask = () => {
-    if (newTask.trim() !== "") {
-      const newTaskObject = {
-        id: Date.now(),
-        task: newTask,
-        description: newTaskDescription,
-        completed: false,
-      };
-      setTasks([...tasks, newTaskObject]);
-      setNewTask("");
-      setNewTaskDescription("");
+  const handleAddTask = () => {
+    if (newTask.trim() !== '') {
+      addTask(newTask, newTaskDescription);
+      setNewTask('');
+      setNewTaskDescription('');
     }
   };
 
-  const removeTask = (id) => {
-    const updatedTasks = tasks.filter((task) => task.id !== id);
-    setTasks(updatedTasks);
+  const handleRemoveTask = (id) => {
+    removeTask(id);
   };
 
-  const toggleTaskStatus = (id) => {
-    const updatedTasks = tasks.map((task) => {
-      if (task.id === id) {
-        return { ...task, completed: !task.completed };
-      }
-      return task;
-    });
-    setTasks(updatedTasks);
-  };
-
-  const updateTask = (id, updatedTask, updatedDescription) => {
-    const updatedTasks = tasks.map((task) => {
-      if (task.id === id) {
-        return {
-          ...task,
-          task: updatedTask,
-          description: updatedDescription,
-        };
-      }
-      return task;
-    });
-    setTasks(updatedTasks);
+  const handleUpdateTask = (id) => {
+    updateTask(id, newTask, newTaskDescription);
   };
 
   return (
@@ -76,35 +38,18 @@ export const TodoList = () => {
           onChange={(e) => setNewTaskDescription(e.target.value)}
           placeholder="Ingrese una descripción"
         />
-        <button onClick={addTask}>Agregar tarea</button>
+        <button onClick={handleAddTask}>Agregar tarea</button>
       </div>
       <ul>
         {tasks.map((task) => (
-          <li key={task.id} className={task.completed ? "completed" : ""}>
+          <li key={task.id} className={task.completed ? 'completed' : ''}>
             <span>{task.task}</span>
             <span>{task.description}</span>
             <div>
-              <button onClick={() => toggleTaskStatus(task.id)}>
-                {task.completed
-                  ? "pendiente"
-                  : "completada"}
-              </button>
-              <button onClick={() => removeTask(task.id)}>Eliminar</button>
-            </div>
-            <div>
-              <input type="text" defaultValue={task.task} />
-              <input type="text" defaultValue={task.description} />
-              <button
-                onClick={() =>
-                  updateTask(
-                    task.id,
-                    document.getElementById("task-" + task.id).value,
-                    document.getElementById("description-" + task.id).value
-                  )
-                }
-              >
+              <button onClick={() => handleUpdateTask(task.id, task.task, task.description)}>
                 Actualizar
               </button>
+              <button onClick={() => handleRemoveTask(task.id)}>Eliminar</button>
             </div>
           </li>
         ))}
@@ -112,3 +57,4 @@ export const TodoList = () => {
     </div>
   );
 };
+
