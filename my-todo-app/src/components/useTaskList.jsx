@@ -1,57 +1,41 @@
-import { useState, useEffect } from 'react';
+import React from 'react';
 
 export const useTaskList = () => {
-    const [tasks, setTasks] = useState([]);
+  const [tasks, setTasks] = React.useState([]);
 
-    useEffect(() => {
-        const storedTasks = localStorage.getItem('tasks');
-        if (storedTasks) {
-            setTasks(JSON.parse(storedTasks));
-        }
-    }, []);
+  React.useEffect(() => {
+    const storedTasks = JSON.parse(localStorage.getItem('tasks'));
+    if (storedTasks) {
+      setTasks(storedTasks);
+    }
+  }, []);
 
-    useEffect(() => {
-        localStorage.setItem('tasks', JSON.stringify(tasks));
-    }, [tasks]);
+  React.useEffect(() => {
+    localStorage.setItem('tasks', JSON.stringify(tasks));
+  }, [tasks]);
 
-    const addTask = (newTask, newTaskDescription) => {
-        if (newTask.trim() !== '') {
-            const newTaskObject = {
-                id: Date.now(),
-                task: newTask,
-                description: newTaskDescription,
-                completed: false,
-            };
-            setTasks([...tasks, newTaskObject]);
-        }
-    };
+  const addTask = (newTask) => {
+    setTasks([...tasks, newTask]);
+  };
 
-    const removeTask = (id) => {
-        const updatedTasks = tasks.filter((task) => task.id !== id);
-        setTasks(updatedTasks);
-    };
+  const toggleComplete = (index) => {
+    const updatedTasks = [...tasks];
+    updatedTasks[index].complete = !updatedTasks[index].complete;
+    setTasks(updatedTasks);
+  };
 
-    const updateTask = (id, newTask, newTaskDescription) => {
-        const updatedTasks = tasks.map((task) => {
-          if (task.id === id) {
-            return {
-              ...task,
-              task: newTask,
-              description: newTaskDescription,
-            };
-          }
-          return task;
-        });
-        setTasks(updatedTasks);
-      };
-      
+  const deleteTask = (index) => {
+    const updatedTasks = [...tasks];
+    updatedTasks.splice(index, 1);
+    setTasks(updatedTasks);
+  };
 
-    return {
-        tasks,
-        addTask,
-        removeTask,
-        updateTask,
-    };
-}
+  const updateTask = (index, updatedTask) => {
+    const updatedTasks = [...tasks];
+    updatedTasks[index] = updatedTask;
+    setTasks(updatedTasks);
+  };
 
+  return { tasks, addTask, toggleComplete, deleteTask, updateTask };
+};
 

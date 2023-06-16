@@ -1,60 +1,144 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useTaskList } from './useTaskList';
 
 export const TodoList = () => {
-  const { tasks, addTask, removeTask, updateTask } = useTaskList();
-  const [newTask, setNewTask] = useState('');
-  const [newTaskDescription, setNewTaskDescription] = useState('');
+  const { tasks, addTask, toggleComplete, deleteTask, updateTask } = useTaskList();
+
+  const [name, setName] = React.useState('');
+  const [description, setDescription] = React.useState('');
+  const [errorMessage, setErrorMessage] = React.useState('');
+
+  const handleNameChange = (event) => {
+    setName(event.target.value);
+    setErrorMessage('');
+  };
+
+  const handleDescriptionChange = (event) => {
+    setDescription(event.target.value);
+  };
 
   const handleAddTask = () => {
-    if (newTask.trim() !== '') {
-      addTask(newTask, newTaskDescription);
-      setNewTask('');
-      setNewTaskDescription('');
+    if (name.trim().length < 3) {
+      setErrorMessage('El nombre debe tener al menos 3 caracteres.');
+      return;
     }
-  };
 
-  const handleRemoveTask = (id) => {
-    removeTask(id);
-  };
+    const task = {
+      name: name,
+      description: description,
+      complete: false
+    };
 
-  const handleUpdateTask = (id) => {
-    updateTask(id, newTask, newTaskDescription);
+    addTask(task);
+    setName('');
+    setDescription('');
   };
 
   return (
-    <div className="todo-list">
+    <div>
       <h1>Lista de Tareas</h1>
-      <div className="input-container">
-        <input
-          type="text"
-          value={newTask}
-          onChange={(e) => setNewTask(e.target.value)}
-          placeholder="Ingrese una tarea"
-        />
-        <input
-          type="text"
-          value={newTaskDescription}
-          onChange={(e) => setNewTaskDescription(e.target.value)}
-          placeholder="Ingrese una descripción"
-        />
-        <button onClick={handleAddTask}>Agregar tarea</button>
-      </div>
-      <ul>
-        {tasks.map((task) => (
-          <li key={task.id} className={task.completed ? 'completed' : ''}>
-            <span>{task.task}</span>
-            <span>{task.description}</span>
-            <div>
-              <button onClick={() => handleUpdateTask(task.id, task.task, task.description)}>
-                Actualizar
-              </button>
-              <button onClick={() => handleRemoveTask(task.id)}>Eliminar</button>
-            </div>
-          </li>
-        ))}
-      </ul>
+      <form>
+        <label>
+          Nombre de la Tarea:
+          <input
+            type="text"
+            value={name}
+            onChange={handleNameChange}
+          />
+        </label>
+        <label>
+          Descripción de la Tarea:
+          <textarea
+            value={description}
+            onChange={handleDescriptionChange}
+          ></textarea>
+        </label>
+        <button type="button" onClick={handleAddTask}>Agregar</button>
+        {errorMessage && <p>{errorMessage}</p>}
+      </form>
+      <TaskList
+        tasks={tasks}
+        onToggleComplete={toggleComplete}
+        onDeleteTask={deleteTask}
+        onUpdateTask={updateTask}
+      />
     </div>
+  );
+};
+
+const TaskItem = ({ task, onToggleComplete, onDeleteTask, onUpdateTask }) => {
+  const [isEditing, setIsEditing] = React.useState(false);
+  const [editedName, setEditedName] = React.useState(task.name);
+  const [editedDescription, setEditedDescription] = React.useState(task.description);
+
+  const handleNameChange = (event) => {
+    setEditedName(event.target.value);
+  };
+
+  const handleDescriptionChange = (event) => {
+    setEditedDescription(event.target.value);
+  };
+
+  const handleUpdateTask = () => {
+    if (editedName.trim() !== '' && editedDescription.trim() !== '') {
+      const updatedTask = {
+        ...task,
+        name: editedName,
+        description: editedDescription
+      };
+      onUpdateTask(updatedTask);
+      setIsEditing(false);
+    }
+  };
+
+  if (isEditing) {
+    return (
+      <li>
+        <input
+          type="text"
+          value={editedName}
+          onChange={handleNameChange}
+        />
+        <textarea
+          value={editedDescription}
+          onChange={handleDescriptionChange}
+        ></textarea>
+        <button onClick={handleUpdateTask}>Guardar</button>
+      </li>
+    );
+  }
+
+  return (
+    <li>
+      <span
+        style={{
+          textDecoration: task.complete ? 'line-through' : 'none'
+        }}
+      >
+        {task.name} - {task.description}
+      </span>
+      <button onClick={onToggleComplete}>
+        {task.complete ? 'Marcar como Pendiente' : 'Marcar como Completa'}
+      </button>
+      <button onClick={onDeleteTask}>Eliminar</button>
+      <button onClick={() => setIsEditing(true)}>Editar</button>
+    </li>
+  );
+};
+
+const TaskList = ({ tasks, onToggleComplete, onDeleteTask, onUpdateTask }) => {
+  return (
+    <ul>
+      {tasks.map((task, index) => (
+        <TaskItem
+          key={index}
+          task={task}
+          onToggleComplete={() => onToggleComplete(index)}
+          onDeleteTask={() => onDeleteTask(index)}
+          onUpdateTask={(updatedTask) => onUpdateTask(index, updatedTask)}
+        />
+      ))}
+    </ul>
   );
 };
 
