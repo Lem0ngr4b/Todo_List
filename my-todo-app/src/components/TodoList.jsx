@@ -1,144 +1,171 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useTaskList } from './useTaskList';
+import {
+  Box,
+  Heading,
+  Input,
+  Stack,
+  Button,
+  Text,
+  Flex,
+  List,
+  ListItem,
+} from '@chakra-ui/react';
 
 export const TodoList = () => {
-  const { tasks, addTask, toggleComplete, deleteTask, updateTask } = useTaskList();
-
-  const [name, setName] = React.useState('');
-  const [description, setDescription] = React.useState('');
-  const [errorMessage, setErrorMessage] = React.useState('');
-
-  const handleNameChange = (event) => {
-    setName(event.target.value);
-    setErrorMessage('');
-  };
-
-  const handleDescriptionChange = (event) => {
-    setDescription(event.target.value);
-  };
+  const { tasks, addTask, removeTask, toggleTaskComplete, updateTask } =
+    useTaskList();
+  const [newTask, setNewTask] = useState('');
+  const [newTaskDescription, setNewTaskDescription] = useState('');
+  const [editTaskId, setEditTaskId] = useState(null);
+  const [editTask, setEditTask] = useState('');
+  const [editTaskDescription, setEditTaskDescription] = useState('');
 
   const handleAddTask = () => {
-    if (name.trim().length < 3) {
-      setErrorMessage('El nombre debe tener al menos 3 caracteres.');
-      return;
+    if (newTask.trim().length >= 3) {
+      addTask(newTask, newTaskDescription);
+      setNewTask('');
+      setNewTaskDescription('');
     }
+  };
 
-    const task = {
-      name: name,
-      description: description,
-      complete: false
-    };
+  const handleRemoveTask = (id) => {
+    removeTask(id);
+  };
 
-    addTask(task);
-    setName('');
-    setDescription('');
+  const handleToggleTaskComplete = (id) => {
+    toggleTaskComplete(id);
+  };
+
+  const handleUpdateTask = (id) => {
+    updateTask(id, editTask, editTaskDescription);
+    setEditTaskId(null);
+    setEditTask('');
+    setEditTaskDescription('');
+  };
+
+  const handleCancelUpdate = () => {
+    setEditTaskId(null);
+    setEditTask('');
+    setEditTaskDescription('');
+  };
+
+  const handleEditTask = (id, task, description) => {
+    setEditTaskId(id);
+    setEditTask(task);
+    setEditTaskDescription(description);
   };
 
   return (
-    <div>
-      <h1>Lista de Tareas</h1>
-      <form>
-        <label>
-          Nombre de la Tarea:
-          <input
-            type="text"
-            value={name}
-            onChange={handleNameChange}
-          />
-        </label>
-        <label>
-          Descripción de la Tarea:
-          <textarea
-            value={description}
-            onChange={handleDescriptionChange}
-          ></textarea>
-        </label>
-        <button type="button" onClick={handleAddTask}>Agregar</button>
-        {errorMessage && <p>{errorMessage}</p>}
-      </form>
-      <TaskList
-        tasks={tasks}
-        onToggleComplete={toggleComplete}
-        onDeleteTask={deleteTask}
-        onUpdateTask={updateTask}
-      />
-    </div>
-  );
-};
+    <Box p={4}>
+      <Heading as="h1" mb={4}>
+        Lista de Tareas
+      </Heading>
 
-const TaskItem = ({ task, onToggleComplete, onDeleteTask, onUpdateTask }) => {
-  const [isEditing, setIsEditing] = React.useState(false);
-  const [editedName, setEditedName] = React.useState(task.name);
-  const [editedDescription, setEditedDescription] = React.useState(task.description);
-
-  const handleNameChange = (event) => {
-    setEditedName(event.target.value);
-  };
-
-  const handleDescriptionChange = (event) => {
-    setEditedDescription(event.target.value);
-  };
-
-  const handleUpdateTask = () => {
-    if (editedName.trim() !== '' && editedDescription.trim() !== '') {
-      const updatedTask = {
-        ...task,
-        name: editedName,
-        description: editedDescription
-      };
-      onUpdateTask(updatedTask);
-      setIsEditing(false);
-    }
-  };
-
-  if (isEditing) {
-    return (
-      <li>
-        <input
+      <Stack direction="column" spacing={3} mb={4}>
+        <Input
           type="text"
-          value={editedName}
-          onChange={handleNameChange}
+          value={newTask}
+          onChange={(e) => setNewTask(e.target.value)}
+          placeholder="Ingrese una tarea (mínimo 3 caracteres)"
         />
-        <textarea
-          value={editedDescription}
-          onChange={handleDescriptionChange}
-        ></textarea>
-        <button onClick={handleUpdateTask}>Guardar</button>
-      </li>
-    );
-  }
+        <Input
+          type="text"
+          value={newTaskDescription}
+          onChange={(e) => setNewTaskDescription(e.target.value)}
+          placeholder="Ingrese una descripción (opcional)"
+        />
+        <Button
+          onClick={handleAddTask}
+          colorScheme="teal"
+          isDisabled={newTask.trim().length < 3}
+        >
+          Agregar tarea
+        </Button>
+      </Stack>
 
-  return (
-    <li>
-      <span
-        style={{
-          textDecoration: task.complete ? 'line-through' : 'none'
-        }}
-      >
-        {task.name} - {task.description}
-      </span>
-      <button onClick={onToggleComplete}>
-        {task.complete ? 'Marcar como Pendiente' : 'Marcar como Completa'}
-      </button>
-      <button onClick={onDeleteTask}>Eliminar</button>
-      <button onClick={() => setIsEditing(true)}>Editar</button>
-    </li>
+      <List spacing={2}>
+        {tasks.map((task) => (
+          <ListItem
+            key={task.id}
+            display="flex"
+            justifyContent="space-between"
+            alignItems="center"
+            bg={task.completed ? 'gray.100' : 'transparent'}
+            p={2}
+            borderRadius="md"
+          >
+            {editTaskId === task.id ? (
+              <>
+                <Input
+                  type="text"
+                  value={editTask}
+                  onChange={(e) => setEditTask(e.target.value)}
+                />
+                <Input
+                  type="text"
+                  value={editTaskDescription}
+                  onChange={(e) => setEditTaskDescription(e.target.value)}
+                />
+              </>
+            ) : (
+              <Stack direction="row" spacing={2} flex={1}>
+                <Text>{task.task}</Text>
+                <Text>{task.description}</Text>
+              </Stack>
+            )}
+
+            <Flex>
+              {editTaskId === task.id ? (
+                <>
+                  <Button
+                    onClick={() => handleUpdateTask(task.id)}
+                    colorScheme="teal"
+                    size="sm"
+                    mr={2}
+                  >
+                    Guardar
+                  </Button>
+                  <Button
+                    onClick={handleCancelUpdate}
+                    colorScheme="gray"
+                    size="sm"
+                  >
+                    Cancelar
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button
+                    onClick={() =>
+                      handleEditTask(task.id, task.task, task.description)
+                    }
+                    colorScheme="teal"
+                    size="sm"
+                    mr={2}
+                  >
+                    Editar
+                  </Button>
+                  <Button
+                    onClick={() => handleToggleTaskComplete(task.id)}
+                    colorScheme="teal"
+                    size="sm"
+                  >
+                    {task.completed ? 'Pendiente' : 'Completada'}
+                  </Button>
+                  <Button
+                    onClick={() => handleRemoveTask(task.id)}
+                    colorScheme="red"
+                    size="sm"
+                  >
+                    Eliminar
+                  </Button>
+                </>
+              )}
+            </Flex>
+          </ListItem>
+        ))}
+      </List>
+    </Box>
   );
 };
-
-const TaskList = ({ tasks, onToggleComplete, onDeleteTask, onUpdateTask }) => {
-  return (
-    <ul>
-      {tasks.map((task, index) => (
-        <TaskItem
-          key={index}
-          task={task}
-          onToggleComplete={() => onToggleComplete(index)}
-          onDeleteTask={() => onDeleteTask(index)}
-          onUpdateTask={(updatedTask) => onUpdateTask(index, updatedTask)}
-        />
-      ))}
-    </ul>
-  );
-};
-
