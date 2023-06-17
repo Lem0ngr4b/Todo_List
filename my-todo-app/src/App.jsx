@@ -1,12 +1,11 @@
 import React from "react";
 import { TodoList } from './components/TodoList'
+import { ChakraProvider } from '@chakra-ui/react';
 
-function App() {
+export function App() {
   return (
-    <div className="App">
+    <ChakraProvider>
       <TodoList />
-    </div>
+    </ChakraProvider>
   );
 }
-
-export default App
