@@ -10,19 +10,17 @@ import {
   Flex,
   List,
   ListItem,
+  useColorMode,
 } from '@chakra-ui/react';
 
 export const TodoList = () => {
-  const { tasks, addTask, removeTask, toggleTaskComplete, updateTask } =
-    useTaskList();
+  const { tasks, addTask, removeTask, updateTask } = useTaskList();
   const [newTask, setNewTask] = useState('');
   const [newTaskDescription, setNewTaskDescription] = useState('');
-  const [editTaskId, setEditTaskId] = useState(null);
-  const [editTask, setEditTask] = useState('');
-  const [editTaskDescription, setEditTaskDescription] = useState('');
+  const { colorMode, toggleColorMode } = useColorMode();
 
   const handleAddTask = () => {
-    if (newTask.trim().length >= 3) {
+    if (newTask.trim() !== '') {
       addTask(newTask, newTaskDescription);
       setNewTask('');
       setNewTaskDescription('');
@@ -33,31 +31,18 @@ export const TodoList = () => {
     removeTask(id);
   };
 
-  const handleToggleTaskComplete = (id) => {
-    toggleTaskComplete(id);
-  };
-
-  const handleUpdateTask = (id) => {
-    updateTask(id, editTask, editTaskDescription);
-    setEditTaskId(null);
-    setEditTask('');
-    setEditTaskDescription('');
-  };
-
-  const handleCancelUpdate = () => {
-    setEditTaskId(null);
-    setEditTask('');
-    setEditTaskDescription('');
-  };
-
-  const handleEditTask = (id, task, description) => {
-    setEditTaskId(id);
-    setEditTask(task);
-    setEditTaskDescription(description);
+  const handleUpdateTask = (id, updatedTask, updatedDescription) => {
+    updateTask(id, updatedTask, updatedDescription);
   };
 
   return (
     <Box p={4}>
+      <Flex justify="flex-end">
+        <Button onClick={toggleColorMode}>
+          {colorMode === 'light' ? 'Modo Oscuro' : 'Modo Claro'}
+        </Button>
+      </Flex>
+
       <Heading as="h1" mb={4}>
         Lista de Tareas
       </Heading>
@@ -67,19 +52,15 @@ export const TodoList = () => {
           type="text"
           value={newTask}
           onChange={(e) => setNewTask(e.target.value)}
-          placeholder="Ingrese una tarea (mínimo 3 caracteres)"
+          placeholder="Ingrese una tarea"
         />
         <Input
           type="text"
           value={newTaskDescription}
           onChange={(e) => setNewTaskDescription(e.target.value)}
-          placeholder="Ingrese una descripción (opcional)"
+          placeholder="Ingrese una descripción"
         />
-        <Button
-          onClick={handleAddTask}
-          colorScheme="teal"
-          isDisabled={newTask.trim().length < 3}
-        >
+        <Button onClick={handleAddTask} colorScheme="teal">
           Agregar tarea
         </Button>
       </Stack>
@@ -91,77 +72,35 @@ export const TodoList = () => {
             display="flex"
             justifyContent="space-between"
             alignItems="center"
-            bg={task.completed ? 'gray.100' : 'transparent'}
+            bg={colorMode === 'light' ? 'gray.100' : 'gray.700'}
             p={2}
             borderRadius="md"
           >
-            {editTaskId === task.id ? (
-              <>
-                <Input
-                  type="text"
-                  value={editTask}
-                  onChange={(e) => setEditTask(e.target.value)}
-                />
-                <Input
-                  type="text"
-                  value={editTaskDescription}
-                  onChange={(e) => setEditTaskDescription(e.target.value)}
-                />
-              </>
-            ) : (
-              <Stack direction="row" spacing={2} flex={1}>
-                <Text>{task.task}</Text>
-                <Text>{task.description}</Text>
-              </Stack>
-            )}
-
+            <Text>{task.task}</Text>
+            <Text>{task.description}</Text>
             <Flex>
-              {editTaskId === task.id ? (
-                <>
-                  <Button
-                    onClick={() => handleUpdateTask(task.id)}
-                    colorScheme="teal"
-                    size="sm"
-                    mr={2}
-                  >
-                    Guardar
-                  </Button>
-                  <Button
-                    onClick={handleCancelUpdate}
-                    colorScheme="gray"
-                    size="sm"
-                  >
-                    Cancelar
-                  </Button>
-                </>
-              ) : (
-                <>
-                  <Button
-                    onClick={() =>
-                      handleEditTask(task.id, task.task, task.description)
-                    }
-                    colorScheme="teal"
-                    size="sm"
-                    mr={2}
-                  >
-                    Editar
-                  </Button>
-                  <Button
-                    onClick={() => handleToggleTaskComplete(task.id)}
-                    colorScheme="teal"
-                    size="sm"
-                  >
-                    {task.completed ? 'Pendiente' : 'Completada'}
-                  </Button>
-                  <Button
-                    onClick={() => handleRemoveTask(task.id)}
-                    colorScheme="red"
-                    size="sm"
-                  >
-                    Eliminar
-                  </Button>
-                </>
-              )}
+              <Button
+                onClick={() =>
+                  handleUpdateTask(
+                    task.id,
+                    task.task,
+                    task.description,
+                    !task.completed
+                  )
+                }
+                colorScheme="teal"
+                size="sm"
+                mr={2}
+              >
+                {task.completed ? 'Pendiente' : 'Completada'}
+              </Button>
+              <Button
+                onClick={() => handleRemoveTask(task.id)}
+                colorScheme="red"
+                size="sm"
+              >
+                Eliminar
+              </Button>
             </Flex>
           </ListItem>
         ))}
